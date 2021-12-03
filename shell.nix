@@ -1,0 +1,2 @@
+(import ./. {}).shells.ghc
+
