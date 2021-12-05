@@ -21,10 +21,12 @@ class (Ord (C m)) => WebM c s m | m -> c, m -> s where
   type CM m :: * -> *
   -- | Server-side Reflex monad.
   type SM m :: * -> *
-  -- | Perception of event occurrences at a specific client.
-  atC :: (JSON a) => Event s (Map (C m) a) -> m (Event c a)
-  -- | Perception of event occurrences at Server.
-  atS :: (JSON a) => Event c a -> m (Event s (C m, a))
+  -- TODO: Consider making this Event c [a] (enabling "batch processing").
+  -- | Perception of server event occurrences at a specific client.
+  atCE :: (JSON a) => Event s (Map (C m) a) -> m (Event c a)
+  -- TODO: Consider making this `Event (Map (C m) a)`.
+  -- | Perception of client event occurrences at Server.
+  atSE :: (JSON a) => Event c a -> m (Event s (C m, a))
   -- | Connected to server.
   askConnected :: m (Dynamic c Bool)
   -- TODO: Incremental set?
@@ -35,11 +37,12 @@ class (Ord (C m)) => WebM c s m | m -> c, m -> s where
   -- | FIXME: Unsafe, should be wrapped in a Behavior s to prevent client-side evaluation of values only defined on server.
   liftS :: SM m a -> m a
 
+-- TODO: Rename to atAllCE
 atAllC :: (WebM c s m, Reflex s, FromJSON a, ToJSON a, Monad m)
   => Event s a -> m (Event c a)
 atAllC e = do
   cs <- fmap (current . fmap Map.keysSet . incrementalToDynamic) askConnections
-  atC ((\cs' a -> Map.fromSet (const a) cs') <$> cs <@> e)
+  atCE ((\cs' a -> Map.fromSet (const a) cs') <$> cs <@> e)
 
 askNewConnections :: (Reflex s, WebM c s m, Functor m) => m (Event s (Set (C m)))
 askNewConnections =
