@@ -29,7 +29,7 @@ library
   build-depends:       base
                      , reflex
                      -- TODO: factor out reflex-dom dependency
-                     , reflex-dom
+                     , reflex-dom-core
                      , mtl
                      , transformers
                      , witherable
