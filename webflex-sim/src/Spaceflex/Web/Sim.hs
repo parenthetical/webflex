@@ -74,8 +74,13 @@ sim (ClientT cm) (ServerT sm) = mdo
   -- TODO: this really needs an incremental map in which the values are also incremental
   conns_ :: Incremental t (PatchMap Cn_ ()) <-
     holdIncremental mempty . fmap PatchMap $
-      (Map.fromList . (fmap (,Just ())) <$> clientConnectedE)
+      (Map.fromList . (fmap (,Just ())) <$> clientConnectedAtServerE)
       <> (Map.fromList  . (fmap (,Nothing)) <$> clientDisconnectedE)
+  -- TODO: better names for connected events
+  -- FIXME: transmission delay repeated at message send
+  clientConnectedAtServerE <- delay 0.5 clientConnectedE
+  -- TODO: think about client disconnect:
+  -- clientDisconnectedAtServerE <- delay 0.5 clientDisconnectedE
   (clientDeletedE, addClientDeletedE) <- wormhole
   (clientConnectedE, addClientConnectedE) <- wormhole
   (clientDisconnectedE, addClientDisconnectedE) <- wormhole
@@ -99,7 +104,6 @@ sim (ClientT cm) (ServerT sm) = mdo
           -- Sequence of connection ids the client has (new one on every disconnect/connect)
           ~(id0,idE) <- runWithReplace getId' (getId' <$ connectE)
           -- TODO: Can we make a kind of incremental map wormhole for this?
-          -- TODO: Can we use `now` instead of `getPostBuild`?
           addClientConnectedE
             . ([id0] <$)
             =<< getPostBuild
