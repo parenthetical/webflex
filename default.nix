@@ -22,7 +22,7 @@ in (import sources.reflex-platform { inherit system; }).project ({ pkgs, ... }: 
   withHoogle = true;
   
   shells = {
-    ghc = [ "webflex-core" "webflex-sim" "reflex-extras" ];
+    ghc8_10 = [ "webflex-core" "webflex-sim" "reflex-extras" ];
     ghcjs = [ "webflex-core" "webflex-sim" ];
   };
 })

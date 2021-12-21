@@ -1,2 +1,2 @@
-(import ./. {}).shells.ghc
+(import ./. {}).shells.ghc8_10
 
