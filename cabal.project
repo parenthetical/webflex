@@ -1,2 +1,2 @@
-optional-packages: reflex-extras/*.cabal webflex-sim/*.cabal webflex-core/*.cabal
+optional-packages: *
 write-ghc-environment-files: never
