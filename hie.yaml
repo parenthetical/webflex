@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "webflex-sim/src"
+      component: "lib:webflex-sim"
+    - path: "webflex-sim/src-exe"
+      component: "exe:sim-test"
+    - path: "reflex-extras/src"
+      component: "lib:reflex-extras"
+    - path: "webflex-core/src"
+      component: "lib:webflex-core"
