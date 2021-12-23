@@ -39,5 +39,6 @@ library
                     , mtl
                     , monoidal-containers
                     , reflex-extras
+                    , witherable
     hs-source-dirs:   src
     default-language: Haskell2010

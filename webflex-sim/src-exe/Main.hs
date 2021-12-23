@@ -12,10 +12,11 @@ import Reflex.Wormhole.Base
 import Reflex.Wormhole.Class
 import Control.Monad.IO.Class
 import Control.Monad.Fix
-import Reflex.Id.Impure
+import Reflex.Id.Impure ( runIdT', IdT )
 import Data.IORef
 import Spaceflex.Web.Class
 import qualified Data.Text as T
+import Spaceflex.Web.Base
 
 countAll :: forall c s m. (DomBuilder c (CM m), WebM c s m,
                        PostBuild c (CM m), Reflex s, MonadHold c (CM m),
@@ -24,12 +25,11 @@ countAll = do
   clickz <- liftC $ button "click me"
   clickzAtS <- atSE clickz
   countAtS <- liftS $ count clickzAtS
-  countUpdatedKnownAtCE :: Event c Integer <- atAllC (updated countAtS)
-  countC <- liftC $ holdDyn 0 countUpdatedKnownAtCE
+  countC <- atAllCDyn (0 :: Integer) countAtS
   liftC $ dynText (fmap (T.pack . show) countC)
   pure ()
 
-runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m, _) =>
+runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
                             WormholeT Int t (IdT m) b -> m b
 runImpureWormholeT m = do
   idRef <- liftIO $ newIORef 0
@@ -39,9 +39,8 @@ prog :: forall t m. (MonadIO (Performable m), DomBuilder t m,
                        PostBuild t m, PerformEvent t m, TriggerEvent t m, MonadHold t m,
                        MonadIO m, MonadFix m) => m ()
 prog = do
-  let x :: WormholeT Int t (IdT m) () = sim countAll countAll
   text "Hellooo"
-  runImpureWormholeT x
+  runImpureWormholeT $ sim countAll countAll
   pure ()
 
 main :: IO ()
