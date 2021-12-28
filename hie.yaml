@@ -8,3 +8,7 @@ cradle:
       component: "lib:reflex-extras"
     - path: "webflex-core/src"
       component: "lib:webflex-core"
+    - path: "webflex-server/src"
+      component: "lib:webflex-server"
+    - path: "webflex-client/src"
+      component: "lib:webflex-client"
