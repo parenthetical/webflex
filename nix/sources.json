@@ -11,28 +11,16 @@
         "url": "https://github.com/nmattia/niv/archive/1819632b5823e0527da28ad82fecd6be5136c1e9.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
-    "nixpkgs": {
-        "branch": "release-20.03",
-        "description": "Nix Packages collection",
-        "homepage": "",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "1db42b7fe3878f3f5f7a4f2dc210772fd080e205",
-        "sha256": "05k9y9ki6jhaqdhycnidnk5zrdzsdammbk5lsmsbz249hjhhgcgh",
-        "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/1db42b7fe3878f3f5f7a4f2dc210772fd080e205.tar.gz",
-        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
-    },
     "reflex-platform": {
-        "branch": "develop",
+        "branch": "ghc-8.10",
         "description": "A curated package set and set of tools that let you build Haskell packages so they can run on a variety of platforms. reflex-platform is built on top of the nix package manager.",
         "homepage": "https://reflex-frp.org",
         "owner": "reflex-frp",
         "repo": "reflex-platform",
-        "rev": "a52af171b78b4657239c16a1c42bfd26ddbaf4e8",
-        "sha256": "19b0xnk74rpla8q6xgsz7ksva13wvzvza6f9jas037kahyz4ks4f",
+        "rev": "3acef953cf6afe227bc383e7606567202c5d1691",
+        "sha256": "1fn12cryq1rgr7vr16jiq06s5fzpkh671rw1ydpng04bkrsdn5m0",
         "type": "tarball",
-        "url": "https://github.com/reflex-frp/reflex-platform/archive/a52af171b78b4657239c16a1c42bfd26ddbaf4e8.tar.gz",
+        "url": "https://github.com/reflex-frp/reflex-platform/archive/3acef953cf6afe227bc383e7606567202c5d1691.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
