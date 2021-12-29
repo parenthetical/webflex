@@ -12,3 +12,7 @@ cradle:
       component: "lib:webflex-server"
     - path: "webflex-client/src"
       component: "lib:webflex-client"
+    - path: "webflex-todomvc/src"
+      component: "lib:webflex-todomvc"
+    - path: "webflex-todomvc/src-sim"
+      component: "exe:todomvc-sim"

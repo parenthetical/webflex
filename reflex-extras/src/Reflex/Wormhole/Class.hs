@@ -6,6 +6,8 @@ module Reflex.Wormhole.Class where
 
 import Reflex.Class
 import Control.Monad.Trans
+import Data.Semigroup (getFirst, First(First))
+import Reflex.Void
 
 class Wormholed t m where
   wormhole :: Semigroup a => m (Event t a, Event t a -> m ())
@@ -17,3 +19,12 @@ class Wormholed t m where
     (e,f) <- lift wormhole
     pure (e, lift . f)
 
+
+-- | Wormhole which will only have one simultaneous occurrence at most. Arbitrarily picks an occurrence depending on implementation.
+unsafeWormhole :: (Wormholed t m, Reflex t, Monad m) => m (Event t a, Event t a -> m ())
+unsafeWormhole = do
+  (e,f) <- wormhole
+  pure (fmapCheap getFirst e, f . fmap First)
+
+instance Wormholed Voidflex VoidM where
+  wormhole = undefined

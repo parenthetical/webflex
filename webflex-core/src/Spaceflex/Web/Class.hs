@@ -40,6 +40,9 @@ class (Ord (C m)) => WebM c s m | m -> c, m -> s where
   -- | FIXME: Unsafe, should be wrapped in a Behavior s to prevent client-side evaluation of values only defined on server.
   liftS :: SM m a -> m a
 
+atSE_ :: (Reflex s, WebM c s m, Functor m) => (JSON a) => Event c a -> m (Event s a)
+atSE_ = fmap (fmap snd) . atSE
+
 atAllCE :: (WebM c s m, Reflex s, FromJSON a, ToJSON a, Monad m)
   => Event s a -> m (Event c a)
 atAllCE e = do
@@ -52,6 +55,7 @@ askNewConnections =
         . updatedIncremental)
   $ askConnections
 
+-- TODO: Test whether this works correctly with "new value at the same instant as (re)connect of client"
 atAllCDyn :: forall a c s m. (JSON a, WebM c s m, Reflex s, Reflex c, MonadHold c (CM m), Monad m) => a -> Dynamic s a -> m (Dynamic c a)
 atAllCDyn init d = do
   conns <- askConnections
