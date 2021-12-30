@@ -47,8 +47,8 @@ instance (Reflex t, Monad m) => WebM t Voidflex (ClientT t m) where
   type SM (ClientT t m) = VoidM
   askConnected = ClientT $ asks snd
   askConnections = pure (error "Server-side value evaluated in client-side context (connected).")
-  liftC = lift
-  liftS _ = pure (error "Server-side value evaluated in client-side context (liftServer). How did you get here?")
+  liftC' = fmap pure . lift
+  liftS' _ = pure (pure (error "Server-side value evaluated in client-side context (liftServer). How did you get here?"))
   atCE _ = ClientT $ do
     n <- modify (+ 1) >> get
     let convert = (\case A.Error _ -> error "TODO handle unexpected data"
@@ -78,8 +78,8 @@ instance ( Ord i, Reflex t, Monad m
   type SM (ServerT i t m) = m
   askConnections = ServerT (asks snd)
   askConnected = pure (error "Client-side value evaluated in server-side context. How did you get here?")
-  liftC _ = pure (error "Client-side value evaluated in server-side context. How did you get here?")
-  liftS = lift
+  liftC' _ = pure (pure (error "Client-side value evaluated in server-side context. How did you get here?"))
+  liftS' = fmap pure . lift
   atCE e = ServerT $ do
     n <- modify (+ 1) >> get
     tellEvent (fmap (MonoidalMap . fmap (Map.singleton n . toJSON)) e)

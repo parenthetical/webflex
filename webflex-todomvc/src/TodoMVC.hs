@@ -96,7 +96,7 @@ atAllCIncMap init d = mdo
         fmap (const Nothing) <$> currentIncremental mapAtC  <@ reconnectPatchCE
   -- FIXME: Thoroughly test this
   -- On reconnect this tries to reset the local state by deleting' all keys, except the ones which still exist on the server.
-  mapAtC <- liftC $ holdIncremental init . fmap PatchMap . mconcat $
+  mapAtC <- fmap flattenBIncremental . liftC' $ holdIncremental init . fmap PatchMap . mconcat $
     [ oldReset
     , reconnectPatchCE
     , newPatchCE
@@ -109,17 +109,23 @@ data Webhole c s m a = Webhole
   , whCE :: Event c a
   }
 
-webhole :: (Monad m, Wormholed c (CM m), Semigroup a,
-                   FromJSON a, ToJSON a, WebM c s m) => m (Webhole c s m a)
+webhole :: forall c s m a. (Monad m, Wormholed c (CM m), Semigroup a, Reflex c,
+                   FromJSON a, ToJSON a, WebM c s m, MonadSample c (CM m)) => m (Webhole c s m a)
 webhole = do
-  (ce, cf) <- liftC wormhole
+  -- (ce, cf)
+  cecf <- liftC' wormhole
+  let ce = flattenB . fmap fst $ cecf
+  let cf :: Event c a -> CM m ()
+      cf e = ($ e) =<< sample (fmap snd cecf)
   se <- atSE ce
   pure (Webhole se cf ce)
 
 unsafeWebhole :: (Wormholed c (CM m), Reflex c, FromJSON a, ToJSON a,
-                   WebM c s m, Monad m, Monad (CM m)) => m (Webhole c s m a)
+                   WebM c s m, Monad m, Monad (CM m), MonadSample c (CM m)) => m (Webhole c s m a)
 unsafeWebhole = do
-  (ce, cf) <- liftC unsafeWormhole
+  cecf <- liftC' unsafeWormhole
+  let ce = flattenB . fmap fst $ cecf
+  let cf e = ($ e) =<< sample (fmap snd cecf)
   se <- atSE ce
   pure (Webhole se cf ce)
 
@@ -128,10 +134,10 @@ todomvc :: forall c s m. (WebM c s m, DomBuilder c (CM m), Wormholed c (CM m), P
                    MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
                    MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
 todomvc = mdo
-  liftC $ mainHeader
+  liftC_ $ mainHeader
   newTask :: Event s Text <- atSE_ =<< liftC taskEntry
   nextTaskNum :: Dynamic s Integer <- liftS $ count newTask
-  taskList :: Incremental s (PatchMap Integer Task) <- liftS $
+  taskList :: Incremental s (PatchMap Integer Task) <- fmap flattenBIncremental . liftS' $
     holdIncremental mempty
       (((\k v -> PatchMap (Map.singleton k (Just (Task v False))))
        <$> current nextTaskNum
@@ -155,40 +161,8 @@ todomvc = mdo
   -- TODO: make this take Incremental
   whDeleteCompleted :: Webhole c s m () <- unsafeWebhole
   activeFilter <- liftC $ controls (fmap task <$> incrementalToDynamic taskListAtC') (whCF whDeleteCompleted)
-  liftC infoFooter
+  liftC_ infoFooter
   pure ()
-
--- todoMVC = el "div" $ do
---   elAttr "section" ("class" =: "todoapp") $ mdo
---     mainHeader
---     newTask :: Event t Text <- taskEntry
---     -- TODO: Would be nice to use CRDT-like semantics for simultaneous occurrences instead of using unsafeWormhole.
---     (toggleAllE, toggleAllEF) <- unsafeWormhole
---     (deleteCompletedE, deleteCompletedEF) <- unsafeWormhole
---     let topPosition :: Behavior t (Pos t) = fmap fst . Map.lookupMin <$> currentIncremental theTodoList
---     let inserts :: Event t ((Pos t, Pos t), Text) =
---           (\p t -> ((Nothing,p), t)) <$> topPosition <@> newTask
---     theTodoList :: Incremental t (PatchMap (Crdt.ListId (Location t, Int)) (Dynamic t (Task' t m))) <-
---       Crdt.list . flip dPushAlways (dEvent inserts) $ \(p, txt) -> do
---         (checkE, checkEF) <- unsafeWormhole
---         (deleteE, deleteEF) <- unsafeWormhole
---         (updateTxtE, updateTxtEF) <- unsafeWormhole
---         checkedDyn <- Crdt.enableOnceFlag (leftmost [checkE,toggleAllE])
---         deletedDyn <- Crdt.enableOnceFlag (leftmost [ True <$ deleteE
---                                                     , tag (current checkedDyn) deleteCompletedE
---                                                     ])
---         txtDyn <- Crdt.lww txt (dEvent updateTxtE)
---         pure $ (p, ( Task' <$> (Task <$> txtDyn <*> checkedDyn)
---                                 <*> pure checkEF
---                                 <*> deletedDyn
---                                 <*> pure deleteEF
---                                 <*> pure updateTxtEF)
---                         )
---     let tasksDyn = incrToDynTaskList theTodoList
---     taskList activeFilter tasksDyn toggleAllEF
---     activeFilter <- controls (fmap task <$> tasksDyn) deleteCompletedEF
---     return ()
---   infoFooter
 
 -- | Display the main header
 mainHeader :: DomBuilder t m => m ()

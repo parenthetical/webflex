@@ -26,7 +26,7 @@ countAll = do
   clickzAtS <- atSE clickz
   countAtS <- liftS $ count clickzAtS
   countC <- atAllCDyn (0 :: Integer) countAtS
-  liftC $ dynText (fmap (T.pack . show) countC)
+  liftC_ $ dynText (fmap (T.pack . show) countC)
   pure ()
 
 runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
