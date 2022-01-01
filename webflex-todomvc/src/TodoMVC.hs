@@ -133,7 +133,19 @@ unsafeWebhole = do
 todomvc :: forall c s m. (WebM c s m, DomBuilder c (CM m), Wormholed c (CM m), PostBuild c (CM m),
                    MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
                    MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
-todomvc = mdo
+todomvc = do
+  liftC_ $ mainHeader
+  newTask :: Event s Text <- atSE_ =<< liftC taskEntry
+  nextTaskNum :: Dynamic s Integer <- liftS $ count newTask
+  taskListSDyn <- liftS $ foldDyn (:) [] newTask
+  taskListCDyn <- atAllCDyn [] taskListSDyn
+  liftC_ . dynText . fmap (T.pack . show) $ taskListCDyn
+
+
+todomvc' :: forall c s m. (WebM c s m, DomBuilder c (CM m), Wormholed c (CM m), PostBuild c (CM m),
+                   MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
+                   MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
+todomvc' = mdo
   liftC_ $ mainHeader
   newTask :: Event s Text <- atSE_ =<< liftC taskEntry
   nextTaskNum :: Dynamic s Integer <- liftS $ count newTask
