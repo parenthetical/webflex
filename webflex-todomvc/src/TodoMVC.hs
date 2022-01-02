@@ -134,11 +134,25 @@ todomvc :: forall c s m. (WebM c s m, DomBuilder c (CM m), Wormholed c (CM m), P
                    MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
                    MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
 todomvc = do
-  liftC_ $ mainHeader
-  newTask :: Event s Text <- atSE_ =<< liftC taskEntry
-  nextTaskNum :: Dynamic s Integer <- liftS $ count newTask
-  taskListSDyn <- liftS $ foldDyn (:) [] newTask
-  taskListCDyn <- atAllCDyn [] taskListSDyn
+  -- CRASH: happens when I use wormhole and once I add the count for the task ids
+  newTaskH <- liftC' $ unsafeWormhole
+  let newTaskCE = flattenB . fmap fst $ newTaskH
+  let newTaskCF e = ($ e) =<< sample (fmap snd newTaskH)
+  newTaskE <- liftC_ taskEntry
+  newTaskSE <- atSE newTaskCE
+  nextTaskNum :: Dynamic s Integer <- liftS $ count newTaskSE
+  taskListSDyn :: Dynamic s (Map Integer Task) <- liftS $ foldDyn (\(k,t) ts -> Map.insert k t ts) mempty (attach (current nextTaskNum) (flip Task False . snd <$> newTaskSE))
+  taskListCDyn <- atAllCDyn mempty taskListSDyn
+  liftC_ . dynText . fmap (T.pack . show) $ taskListCDyn
+
+todomvcNoCrash :: forall c s m. (WebM c s m, DomBuilder c (CM m), Wormholed c (CM m), PostBuild c (CM m),
+                   MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
+                   MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
+todomvcNoCrash = do
+  newTaskSE <- atSE =<< liftC taskEntry
+  nextTaskNum :: Dynamic s Integer <- liftS $ count newTaskSE
+  taskListSDyn :: Dynamic s (Map Integer Task) <- liftS $ foldDyn (\(k,t) ts -> Map.insert k t ts) mempty (attach (current nextTaskNum) (flip Task False . snd <$> newTaskSE))
+  taskListCDyn <- atAllCDyn mempty taskListSDyn
   liftC_ . dynText . fmap (T.pack . show) $ taskListCDyn
 
 
@@ -149,7 +163,7 @@ todomvc' = mdo
   liftC_ $ mainHeader
   newTask :: Event s Text <- atSE_ =<< liftC taskEntry
   nextTaskNum :: Dynamic s Integer <- liftS $ count newTask
-  taskList :: Incremental s (PatchMap Integer Task) <- fmap flattenBIncremental . liftS' $
+  taskListInc :: Incremental s (PatchMap Integer Task) <- fmap flattenBIncremental . liftS' $
     holdIncremental mempty
       (((\k v -> PatchMap (Map.singleton k (Just (Task v False))))
        <$> current nextTaskNum
@@ -157,9 +171,9 @@ todomvc' = mdo
        <> deleteCompletedPatch)
   let deleteCompletedPatch =
         (PatchMap . fmap (const Nothing) . filter taskCompleted)
-        <$> currentIncremental taskList
+        <$> currentIncremental taskListInc
         <@ whSE whDeleteCompleted
-  taskListAtC <- atAllCIncMap mempty taskList
+  taskListAtC <- atAllCIncMap mempty taskListInc
   whTaskComplete  :: Webhole c s m (Integer, Bool) <- unsafeWebhole
   whTaskDelete  :: Webhole c s m Integer <- unsafeWebhole
   whTaskDescription :: Webhole c s m (Integer, Text) <- unsafeWebhole
@@ -172,7 +186,9 @@ todomvc' = mdo
         unsafeMapIncremental (Map.mapWithKey fooTask) (PatchMap . Map.mapWithKey (\k -> fmap (fooTask k)) . unPatchMap) taskListAtC
   -- TODO: make this take Incremental
   whDeleteCompleted :: Webhole c s m () <- unsafeWebhole
-  activeFilter <- liftC $ controls (fmap task <$> incrementalToDynamic taskListAtC') (whCF whDeleteCompleted)
+  let taskListAtCDyn :: Dynamic c (TaskList Integer c (CM m)) = incrementalToDynamic taskListAtC'
+  liftC_ $ taskList activeFilter taskListAtCDyn (const (pure ()))
+  activeFilter :: Dynamic c Filter <- liftC $ controls (fmap task <$> incrementalToDynamic taskListAtC') (whCF whDeleteCompleted)
   liftC_ infoFooter
   pure ()
 
