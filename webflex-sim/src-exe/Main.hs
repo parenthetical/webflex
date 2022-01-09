@@ -39,7 +39,6 @@ prog :: forall t m. (MonadIO (Performable m), DomBuilder t m,
                        PostBuild t m, PerformEvent t m, TriggerEvent t m, MonadHold t m,
                        MonadIO m, MonadFix m) => m ()
 prog = do
-  text "Hellooo"
   runImpureWormholeT $ sim countAll countAll
   pure ()
 
