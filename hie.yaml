@@ -16,3 +16,7 @@ cradle:
       component: "lib:webflex-todomvc"
     - path: "webflex-todomvc/src-sim"
       component: "exe:todomvc-sim"
+    - path: "webflex-counter/src"
+      component: "lib:webflex-counter"
+    - path: "webflex-counter/src-sim"
+      component: "exe:counter-sim"

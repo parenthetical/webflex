@@ -17,10 +17,10 @@
         "homepage": "https://reflex-frp.org",
         "owner": "reflex-frp",
         "repo": "reflex-platform",
-        "rev": "123a6f487ca954fd983f6d4cd6b2a69d4c463d10",
-        "sha256": "16q1rq0rwi6l28fv46q8m0hvb9rxrzf574j865vaz04xy8d5p1ya",
+        "rev": "7b2bc2040c5631f486727073846c399671e2a3dd",
+        "sha256": "03c0bhfr8g08gcv3alf2s3c92jfsqvbim02l2zmk8b38xa9lnz52",
         "type": "tarball",
-        "url": "https://github.com/reflex-frp/reflex-platform/archive/123a6f487ca954fd983f6d4cd6b2a69d4c463d10.tar.gz",
+        "url": "https://github.com/reflex-frp/reflex-platform/archive/7b2bc2040c5631f486727073846c399671e2a3dd.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
