@@ -6,6 +6,10 @@ in (import sources.reflex-platform { inherit system; }).project ({ pkgs, ... }: 
     webflex-core = ./webflex-core;
     webflex-sim = ./webflex-sim;
     reflex-extras = ./reflex-extras;
+    webflex-counter = ./webflex-counter;
+    webflex-client = ./webflex-client;
+    webflex-server = ./webflex-server;
+    webflex-todomvc = ./webflex-todomvc;
   };
   overrides = self: super: {
     data-tree-print = self.callHackage "data-tree-print" "0.1.0.2" {};
@@ -31,7 +35,7 @@ in (import sources.reflex-platform { inherit system; }).project ({ pkgs, ... }: 
   withHoogle = true;
   
   shells = {
-    ghc8_10 = [ "webflex-core" "webflex-sim" "reflex-extras" ];
-    ghcjs8_10 = [ "webflex-core" "webflex-sim" ];
+    ghc8_10 = [ "webflex-core" "webflex-sim" "reflex-extras" "webflex-counter" "webflex-server" "webflex-client" "webflex-todomvc"];
+#    ghcjs8_10 = [ "webflex-core" "webflex-sim" "webflex-client" ];
   };
 })

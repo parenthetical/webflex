@@ -68,6 +68,7 @@ runServer (ServerT p) = do
     =<< fmap (fmap getMonoidalMap . snd) (evalREWST p (receivedE, theClients) 0)
   clientsRef <- liftIO $ newIORef (0 :: Int, mempty :: Map ClientId WS.Connection)
 
+  liftIO . putStrLn $ "Server starting..."
   liftIO . void . forkIO $ do
     forever $ do
       rcv <- readChan c

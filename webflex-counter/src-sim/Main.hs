@@ -17,17 +17,7 @@ import Data.IORef
 import Spaceflex.Web.Class
 import qualified Data.Text as T
 import Spaceflex.Web.Base
-
-countAll :: forall c s m. (DomBuilder c (CM m), WebM c s m,
-                       PostBuild c (CM m), Reflex s, MonadHold c (CM m),
-                       MonadHold s (SM m), MonadFix (SM m), Monad m) => m ()
-countAll = do
-  clickz <- liftC $ button "click me"
-  clickzAtS <- atSE clickz
-  countAtS <- liftS $ count clickzAtS
-  countC <- atAllCDyn (0 :: Integer) countAtS
-  liftC_ $ dynText (fmap (T.pack . show) countC)
-  pure ()
+import WebCounter
 
 runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
                             WormholeT Int t (IdT m) b -> m b
@@ -39,7 +29,7 @@ prog :: forall t m. (MonadIO (Performable m), DomBuilder t m,
                        PostBuild t m, PerformEvent t m, TriggerEvent t m, MonadHold t m,
                        MonadIO m, MonadFix m) => m ()
 prog = do
-  runImpureWormholeT $ sim countAll countAll
+  runImpureWormholeT $ sim webcounter webcounter
   pure ()
 
 main :: IO ()
