@@ -13,23 +13,29 @@ import Reflex.Wormhole.Class
 import Control.Monad.IO.Class
 import Control.Monad.Fix
 import Reflex.Id.Impure ( runIdT', IdT )
+import Reflex.Id.Base ( runIdT', IdT )
 import Data.IORef
 import Spaceflex.Web.Class
 import qualified Data.Text as T
 import Spaceflex.Web.Base
 import TodoMVC
+import Reflex.Id.Base (Idnt)
 
 runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
-                            WormholeT Int t (IdT m) b -> m b
+                            WormholeT Int t (Reflex.Id.Impure.IdT m) b -> m b
 runImpureWormholeT m = do
   idRef <- liftIO $ newIORef 0
-  runIdT' (runWormholeT m) idRef
+  Reflex.Id.Impure.runIdT' (runWormholeT m) idRef
 
-prog :: forall t m. (MonadIO (Performable m), DomBuilder t m,
-                       PostBuild t m, PerformEvent t m, TriggerEvent t m, MonadHold t m,
-                       MonadIO m, MonadFix m) => m ()
+runPureWormholeT :: (Reflex t, MonadFix m) => WormholeT Idnt t (Reflex.Id.Base.IdT m) b -> m b
+runPureWormholeT m = do
+  Reflex.Id.Base.runIdT' (runWormholeT m)
+
+prog :: forall t m. (MonadIO (Performable m), TriggerEvent t m,
+                   PerformEvent t m, PostBuild t m, DomBuilder t m, MonadHold t m,
+                   MonadFix m) => m ()
 prog = do
-  runImpureWormholeT $ sim todomvc todomvc
+  runPureWormholeT (sim todomvc todomvc)
   pure ()
 
 main :: IO ()

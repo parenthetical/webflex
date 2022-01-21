@@ -28,7 +28,6 @@ import Data.Witherable
 import Reflex.Id.Class
 import Control.Monad
 import Control.Monad.Fix
-import qualified Reflex.Id.Impure as IdImpure
 import Reflex.Wormhole.Class
 import Reflex.Wormhole.Base
 -- FIXME: Get rid of `delay 0.1`, figure out why it was needed.
@@ -37,19 +36,15 @@ import Reflex.Wormhole.Base
 
 -- Type of client identifier.
 type C_ = Int
--- Type of connection identifier
-type Cn_ = Int
-
-
-runSimImpure :: (MonadIO m) => IdImpure.IdT m a -> m a
-runSimImpure = IdImpure.runIdT
 
 -- TODO: Deleting clients.
-sim :: forall t m a b. ((DomBuilder t m, PostBuild t m,
+sim :: forall t m a b conn. (DomBuilder t m, PostBuild t m,
                        PerformEvent t m, TriggerEvent t m, MonadIO (Performable m),
-                       MonadHold t m, MonadFix m, Id m ~ Cn_, GetId m)
+                       MonadHold t m, MonadFix m, GetId m
                        , Wormholed t m
-                       ) => ClientT t m a -> ServerT Cn_ t m b -> m ()
+                       -- Type of connection identifier
+                       , conn ~ Id m, Ord conn, Show conn
+                       ) => ClientT t m a -> ServerT conn t m b -> m ()
 sim (ClientT cm) (ServerT sm) = mdo
   elAttr "div" ("style" =: "border: 1px solid gray; padding: 2em") $ do
     el "h1" $ text "The simulator"
@@ -66,13 +61,13 @@ sim (ClientT cm) (ServerT sm) = mdo
       el "br" blank
       dynText =<< holdDyn "" (T.pack . show <$> rcvS)
   newClientE <- el "p" $ button "New client"
-  rcvS :: Event t (Cn_, Map Int Value) <-
+  rcvS :: Event t (conn, Map Int Value) <-
     delay 0.5 . fmap getFirst $ clientMsgSentE
-  ~(_,sndS) :: (b, Event t (MonoidalMap Cn_ (Map Int Value))) <-
+  ~(_,sndS) :: (b, Event t (MonoidalMap conn (Map Int Value))) <-
     elAttr "div" ("style" =: "border: 1px solid gray; padding: 2em")
     $ evalREWST sm (rcvS, conns_) 0
   -- TODO: this really needs an incremental map in which the values are also incremental
-  conns_ :: Incremental t (PatchMap Cn_ ()) <-
+  conns_ :: Incremental t (PatchMap conn ()) <-
     holdIncremental mempty . fmap PatchMap $
       (Map.fromList . (fmap (,Just ())) <$> clientConnectedAtServerE)
       <> (Map.fromList  . (fmap (,Nothing)) <$> clientDisconnectedE)
@@ -88,7 +83,7 @@ sim (ClientT cm) (ServerT sm) = mdo
   clientNum <- count newClientE
   --     , conDisconC :: Event t (Map Cn_ (Maybe ()))
   --     , rcvS' :: Event t (First (Cn_, Map Int Value))
-  -- When a client connects it gets a new connection ID (of type Cn).
+  -- When a client connects it gets a new connection ID.
   _clients :: Dynamic t (Map C_ ()) <-
     listHoldWithKey mempty (leftmost [ Map.singleton <$> current clientNum <@> (Just <$> newClientE)
                                      -- WASHERE: fix map fromlist
@@ -108,7 +103,7 @@ sim (ClientT cm) (ServerT sm) = mdo
             . ([id0] <$)
             =<< getPostBuild
           addClientConnectedE ((:[]) <$> idE)
-          connIdDyn :: Dynamic t (Maybe Cn_) <-
+          connIdDyn :: Dynamic t (Maybe conn) <-
             holdDyn (Just id0) (leftmost [ Nothing <$ disconnectE
                                          , Just <$> idE
                                          ])

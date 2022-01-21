@@ -6,3 +6,6 @@
 module Main where
 
 import TodoMVC
+
+main :: IO ()
+main = pure ()

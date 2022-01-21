@@ -7,7 +7,6 @@ module Reflex.Wormhole.Class where
 import Reflex.Class
 import Control.Monad.Trans
 import Data.Semigroup (getFirst, First(First))
-import Reflex.Void
 
 class Wormholed t m where
   wormhole :: Semigroup a => m (Event t a, Event t a -> m ())
@@ -25,6 +24,3 @@ unsafeWormhole :: (Wormholed t m, Reflex t, Monad m) => m (Event t a, Event t a 
 unsafeWormhole = do
   (e,f) <- wormhole
   pure (fmapCheap getFirst e, f . fmap First)
-
-instance Wormholed Voidflex VoidM where
-  wormhole = undefined
