@@ -2,7 +2,8 @@
 module Main where
 
 import Webflex.Server
-import TodoMVC
+import TodoMVC2
 import Reflex.Spider
 
-main = runSpiderHost $ runServer todomvc
+main :: IO ()
+main = runSpiderHost $ runServer todoMVC

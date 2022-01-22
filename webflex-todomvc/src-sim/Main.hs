@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import Spaceflex.Web.Sim
@@ -18,8 +19,9 @@ import Data.IORef
 import Spaceflex.Web.Class
 import qualified Data.Text as T
 import Spaceflex.Web.Base
-import TodoMVC
+import TodoMVC2
 import Reflex.Id.Base (Idnt)
+import Data.FileEmbed
 
 runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
                             WormholeT Int t (Reflex.Id.Impure.IdT m) b -> m b
@@ -35,8 +37,8 @@ prog :: forall t m. (MonadIO (Performable m), TriggerEvent t m,
                    PerformEvent t m, PostBuild t m, DomBuilder t m, MonadHold t m,
                    MonadFix m) => m ()
 prog = do
-  runPureWormholeT (sim todomvc todomvc)
+  runPureWormholeT (sim todoMVC todoMVC)
   pure ()
 
 main :: IO ()
-main = mainWidget $ prog
+main = mainWidgetWithCss $(embedFile "style.css") $ prog

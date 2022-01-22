@@ -52,6 +52,7 @@ executable todomvc-sim
                  , monoidal-containers
                  , text
                  , witherable
+                 , file-embed
 
 executable todomvc-frontend
     main-is: Frontend.hs

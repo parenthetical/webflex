@@ -31,6 +31,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Reflex.Dom (run)
 import Data.Bifunctor
+import Data.Aeson (ToJSONKey, FromJSONKey, FromJSON,ToJSON)
+import GHC.Generics (Generic)
 import Reflex
 import Reflex.Dom.Core
     ( (&),
@@ -81,7 +83,7 @@ data Task
    = Task { taskDescription :: Text
           , taskCompleted :: Bool
           }
-   deriving (Show, Eq)
+   deriving (Show, Eq, Read, Generic)
 
 -- | Add a new value to a map; automatically choose an unused key
 insertNew_ :: (Enum k, Ord k) => v -> Map k v -> Map k v
@@ -119,11 +121,19 @@ data Action
   | NewTask Text
   | ChangeTask Int TaskAction
   | ToggleAll
+  deriving (Show,Read,Generic)
 
 data TaskAction
   = Update Task
   | DeleteTask
+  deriving (Show,Read,Generic)
 
+instance FromJSON Task
+instance ToJSON Task
+instance FromJSON TaskAction
+instance ToJSON TaskAction
+instance FromJSON Action
+instance ToJSON Action
 
 modifyTasks :: Action -> Map Int Task -> Map Int Task
 modifyTasks a = case a of
@@ -134,18 +144,30 @@ modifyTasks a = case a of
     DeleteTask -> Map.delete k
   ToggleAll -> fmap (\(Task d c) -> Task d (not c))
 
--- TODO: Implement toggle
+todoMVC :: forall c s m. (WebM c s m, DomBuilder c (CM m), PostBuild c (CM m),
+                   MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
+                   MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
+todoMVC = mdo
+  tasksDynS <- liftS $ foldTasks (snd <$> taskActionsES)
+  tasksDynC <- atAllCDyn mempty tasksDynS
+  -- FIXME: If you change the location of this line to the top then frontend stops working and backend works or vice versa, forgot which.
+  taskActionsEC <- liftC (todoMVCLocal tasksDynC)
+  taskActionsES <- atSE taskActionsEC
+  pure ()
 
-todoMVC
+foldTasks :: (Reflex t, MonadHold t m, MonadFix m) => Event t Action -> m (Dynamic t (Map Int Task))
+foldTasks taskActionsE = foldDyn modifyTasks initialTasks $ taskActionsE
+
+todoMVCLocal
   :: ( DomBuilder t m
      , MonadFix m
      , MonadHold t m
      , PostBuild t m
      )
-  => m ()
-todoMVC = mdo
-  tasks <- foldDyn modifyTasks initialTasks $ taskActionsE
-  taskActionsE <- el "div" $ do
+  => Dynamic t (Map Int Task)
+  -> m (Event t Action)
+todoMVCLocal tasks = mdo
+  el "div" $ do
     taskActionsE <- elAttr "section" ("class" =: "todoapp") $ mdo
       mainHeader
       newTask <- taskEntry
@@ -157,7 +179,6 @@ todoMVC = mdo
                           ]
     infoFooter
     pure taskActionsE
-  pure ()
 
 -- | Display the main header
 mainHeader :: DomBuilder t m => m ()
