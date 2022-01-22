@@ -18,6 +18,7 @@ extra-source-files:  CHANGELOG.md
 
 library
   exposed-modules:     TodoMVC
+                     , TodoMVC2
   -- other-modules:
   -- other-extensions:
   build-depends:       base ^>=4.14.1.0
@@ -64,6 +65,8 @@ executable todomvc-frontend
                  , webflex-core
                  , webflex-client
                  , webflex-todomvc
+                 , file-embed
+                 , jsaddle
 
 executable todomvc-backend
     main-is: Backend.hs
