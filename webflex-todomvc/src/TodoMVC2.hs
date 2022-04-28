@@ -71,7 +71,7 @@ import Control.Monad (mapM)
 import Control.Lens ((&), (%~), (.~))
 import Data.Proxy
 import Data.Witherable (catMaybes,filter)
-import Spaceflex.Web.Class
+import Webflex.Class
 import Data.Data (Data)
 import Data.Aeson (ToJSONKey, FromJSONKey, FromJSON,ToJSON)
 import GHC.Generics (Generic)

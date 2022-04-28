@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Spaceflex.Web.Base where
+module Webflex.Base where
 
 import Control.Monad.Writer
 
@@ -13,7 +13,7 @@ import Reflex
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Map.Monoidal (MonoidalMap(..))
-import Spaceflex.Web.Class
+import Webflex.Class
 import Reflex.Void
 import Control.Monad.Trans ()
 import Control.Monad.Reader
@@ -22,6 +22,8 @@ import qualified Data.Aeson as A
 import Data.Void
 import Data.Aeson as A
 
+
+-- | Reader-EventWriter-State transformer.
 newtype REWST r w s t m a =
   REWST (StateT s (EventWriterT t w (ReaderT r m)) a)
   deriving ( Functor,Applicative,Monad,MonadFix,MonadState s,MonadReader r

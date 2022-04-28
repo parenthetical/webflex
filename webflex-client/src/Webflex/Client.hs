@@ -34,7 +34,7 @@ import Control.Monad.Trans
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Void
-import Spaceflex.Web.Base
+import Webflex.Base
 
 -- transform received: (fmap (read . T.unpack) receivedE)
 -- transform to send: fmap (T.pack . show) toSendE

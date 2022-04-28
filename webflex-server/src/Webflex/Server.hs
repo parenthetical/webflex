@@ -41,7 +41,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Spaceflex.Web.Base
+import Webflex.Base
 import Data.Patch.Map
 import Control.Exception
 type ClientId = Int

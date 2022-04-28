@@ -5,7 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Spaceflex.Web.Sim
+import Webflex.Sim
 import Reflex.Dom
 import Reflex
 import Reflex.Wormhole.Base
@@ -14,9 +14,9 @@ import Control.Monad.IO.Class
 import Control.Monad.Fix
 import Reflex.Id.Impure ( runIdT', IdT )
 import Data.IORef
-import Spaceflex.Web.Class
+import Webflex.Class
 import qualified Data.Text as T
-import Spaceflex.Web.Base
+import Webflex.Base
 
 countAll :: forall c s m. (DomBuilder c (CM m), WebM c s m,
                        PostBuild c (CM m), Reflex s, MonadHold c (CM m),

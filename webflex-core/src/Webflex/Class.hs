@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ConstraintKinds #-}
-module Spaceflex.Web.Class where
+module Webflex.Class where
 
 import Reflex
 import Data.Aeson
@@ -20,27 +20,38 @@ import Data.Functor (void)
 type JSON a = (FromJSON a, ToJSON a)
 
 -- TOOD: rename C m -> Client m?
+-- | Client-server web programming in Reflex. The @c@ and @s@ type
+-- variables are the type of Reflex timelines of the clients and the
+-- server. There are corresponding @CM@ and @SM@ contexts for clients
+-- and server.
 class (Ord (C m)) => WebM c s m | m -> c, m -> s where
-  -- | C ID
+  -- | Client identifiers.
   type C m :: *
   -- | Client-side Reflex monad.
   type CM m :: * -> *
   -- | Server-side Reflex monad.
   type SM m :: * -> *
   -- TODO: Consider making this Event c [a] (enabling "batch processing").
-  -- | Perception of server event occurrences at a specific client.
+  -- | Takes a server-side event with client-tagged occurrences, and
+  -- returns a client-side event. The client-side event will have an
+  -- occurrence when the server-side occurrence tagged with that
+  -- particular client's identifier arrives at the client.
   atCE :: (JSON a) => Event s (Map (C m) a) -> m (Event c a)
-  -- TODO: Consider making this `Event (Map (C m) a)`.
-  -- | Perception of client event occurrences at Server.
+  -- TODO: Consider making this `Event (Map (C m) a)` (batch processing).
+  -- | Knowledge of client-side event occurrences at the server.
   atSE :: (JSON a) => Event c a -> m (Event s (C m, a))
   -- | Connected to server.
   askConnected :: m (Dynamic c Bool)
   -- TODO: Incremental set?
   -- | Connected clients.
   askConnections :: m (Incremental s (PatchMap (C m) ()))
-  -- | FIXME: Unsafe, should be wrapped in a Behavior c to prevent server-side evaluation of values only defined on client.
+  -- | Make the client-side Reflex program available in the 'WebM' monad. The result is
+  -- wrapped in a (Behavior c) so that client-values cannot leak into
+  -- server-side contexts.
   liftC' :: CM m a -> m (Behavior c a)
-  -- | FIXME: Unsafe, should be wrapped in a Behavior s to prevent client-side evaluation of values only defined on server.
+  -- | Make the server-side Reflex program available in the 'WebM' monad. The result is
+  -- wrapped in a (Behavior s) so that server-values cannot leak into
+  -- client-side contexts.
   liftS' :: SM m a -> m (Behavior s a)
 
 atSE_ :: (Reflex s, WebM c s m, Functor m) => (JSON a) => Event c a -> m (Event s a)

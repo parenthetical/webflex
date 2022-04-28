@@ -22,8 +22,8 @@ extra-source-files:
     README.md
 
 library
-    exposed-modules:  Spaceflex.Web.Class
-                    , Spaceflex.Web.Base
+    exposed-modules:  Webflex.Class
+                    , Webflex.Base
 
     -- Modules included in this library but not exported.
     -- other-modules:

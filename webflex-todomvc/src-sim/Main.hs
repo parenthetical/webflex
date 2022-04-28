@@ -6,7 +6,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Spaceflex.Web.Sim
+import Webflex.Sim
 import Reflex.Dom
 import Reflex
 import Reflex.Wormhole.Base
@@ -16,9 +16,9 @@ import Control.Monad.Fix
 import Reflex.Id.Impure ( runIdT', IdT )
 import Reflex.Id.Base ( runIdT', IdT )
 import Data.IORef
-import Spaceflex.Web.Class
+import Webflex.Class
 import qualified Data.Text as T
-import Spaceflex.Web.Base
+import Webflex.Base
 import TodoMVC2
 import Reflex.Id.Base (Idnt)
 import Data.FileEmbed

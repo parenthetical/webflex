@@ -9,10 +9,10 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Spaceflex.Web.Sim where
+module Webflex.Sim where
 
 import Prelude hiding (filter)
-import Spaceflex.Web.Base
+import Webflex.Base
 import Reflex
 import Reflex.Dom hiding (Value)
 import Data.Map (Map)
