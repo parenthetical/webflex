@@ -4,5 +4,6 @@ module Main where
 import Webflex.Server
 import WebCounter
 import Reflex.Spider
+import Reflex.Host.Headless
 
-main = runSpiderHost $ runServer webcounter
+main = runHeadlessApp $ serverTToHeadless webcounter

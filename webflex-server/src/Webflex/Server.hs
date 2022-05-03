@@ -44,62 +44,64 @@ import qualified Data.Set as Set
 import Webflex.Base
 import Data.Patch.Map
 import Control.Exception
+import Reflex.Host.Headless
+
+
 type ClientId = Int
 
-runServer ::
-  forall t m x.
-  ( HasSpiderTimeline x
-  , m ~ SpiderHost x
-  , t ~ SpiderTimeline x
-  )
-  => ServerT Int t m ()
-  -> SpiderHost x ()
-runServer (ServerT p) = do
-  c :: Chan (Either (Map ClientId (Maybe ())) (ClientId, Map Int Value)) <- liftIO $ newChan
-  -- Received a message or a client connection was added or deleted
-  (receivedNewClientE :: Event t (Either (Map ClientId (Maybe ())) (ClientId, Map Int Value)), receivedNewClientTrigRef) <-
-    newEventWithTriggerRef
-    -- clientChangeE:: Just () for a new connection, Nothing for terminal a disconnect
-  let (clientChangeE, receivedE) = fanEither receivedNewClientE
+serverTToHeadless :: forall t m. MonadHeadlessApp t m => ServerT Int t m () -> m (Event t ())
+serverTToHeadless (ServerT program) = do
+  (newClientE, newClientTrigger) <- newTriggerEvent
+  (disconnectClientE, disconnectClientTrigger) <- newTriggerEvent
+  (rcvE, rcvTrigger) <- newTriggerEvent
+  let clientChangeE :: (Event t (Map ClientId (Maybe ()))) =
+        leftmost [ (\c -> Map.singleton c (Just ())) <$> newClientE
+                 , (\c -> Map.singleton c Nothing) <$> disconnectClientE
+                 ]
   theClients :: Incremental t (PatchMap ClientId ()) <-
     holdIncremental mempty (PatchMap <$> clientChangeE)
-  toSendHnd <-
-    subscribeEvent
-    =<< fmap (fmap getMonoidalMap . snd) (evalREWST p (receivedE, theClients) 0)
-  clientsRef <- liftIO $ newIORef (0 :: Int, mempty :: Map ClientId WS.Connection)
+  toSendE :: (Event t (Map ClientId (Map Int Value))) <- fmap (fmap getMonoidalMap . snd) (evalREWST program (rcvE, theClients) 0)
+  doSendMsgs <- liftIO $ wsServer newClientTrigger (curry rcvTrigger) disconnectClientTrigger
+  performEvent_ (liftIO . doSendMsgs <$> toSendE)
+  pure never
 
+runServer ::  (forall t m. MonadHeadlessApp t m => ServerT Int t m ()) -> IO ()
+runServer x = runHeadlessApp $ serverTToHeadless x
+
+wsServer :: (FromJSON a, ToJSON a)
+         => (ClientId -> IO ())
+         -> (ClientId -> a -> IO ())
+         -> (ClientId -> IO ())
+         -> IO (Map ClientId a -> IO ())
+wsServer onNewClient onRcvMsg onDisconnectClient = do
   liftIO . putStrLn $ "Server starting..."
-  liftIO . void . forkIO $ do
-    forever $ do
-      rcv <- readChan c
-      (_,connections) <- readIORef clientsRef
-      toSend <- fmap (fmap encode . fromMaybe Map.empty)
-                     . runSpiderHostForTimeline (fireEventRefAndRead receivedNewClientTrigRef rcv toSendHnd)
-                     $ (spiderTimeline :: SpiderTimelineEnv x)
-      forM_ (Map.toList toSend) $ \(i, msg) ->
-        forM_ (Map.lookup i connections) $ \conn -> do
-            T.putStrLn ("Sending to client "
-                        <> T.pack (show i) <> ": "
-                        <> T.decodeUtf8 (BSL.toStrict msg))
-            WS.sendTextData conn msg
-
-  liftIO $ WS.runServer "127.0.0.1" 9160 $ \pending -> do
+  clientsRef <- newIORef (0 :: Int, mempty :: Map ClientId WS.Connection)
+  forkIO $ WS.runServer "127.0.0.1" 9160 $ \pending -> do
     conn <- WS.acceptRequest pending
     WS.withPingThread conn 30 (pure ()) $ do
       clientId <- atomicModifyIORef clientsRef
                    (\(n,cs) -> ((n + 1, Map.insert n conn cs), n))
-      runSpiderHostForTimeline (fireEventRef receivedNewClientTrigRef (Left (Map.singleton clientId (Just ())))) spiderTimeline
-      (forever $ do
+      onNewClient clientId
+      forever $ do
         msg :: BSS.ByteString <- WS.receiveData conn
         T.putStrLn $ "Received at server from client "
           <> T.pack (show clientId) <> ": " <> T.pack (show msg)
         let x = fromMaybe (error "TODO: received bogus data")
                 $ decode (BSL.fromStrict msg)
-        writeChan c (Right (clientId,x)))
+        onRcvMsg clientId x
         `catches`
         [ Handler (\(e :: WS.ConnectionException) -> do
                      T.putStrLn $ "Disconnecting client " <> T.pack (show clientId) <> " because of " <> T.pack (show e)
-                     runSpiderHostForTimeline (fireEventRef receivedNewClientTrigRef (Left (Map.singleton clientId Nothing))) spiderTimeline
+                     onDisconnectClient clientId
                   )
           -- TODO: Other exceptions?
         ]
+  pure $ \msgs -> do
+    (_,connections) <- readIORef clientsRef
+    let toSend = fmap encode msgs
+    forM_ (Map.toList toSend) $ \(i, msg) ->
+        forM_ (Map.lookup i connections) $ \conn -> do
+            T.putStrLn ("Sending to client "
+                        <> T.pack (show i) <> ": "
+                        <> T.decodeUtf8 (BSL.toStrict msg))
+            WS.sendTextData conn msg
