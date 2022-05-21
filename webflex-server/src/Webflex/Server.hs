@@ -45,7 +45,7 @@ import Webflex.Base
 import Data.Patch.Map
 import Control.Exception
 import Reflex.Host.Headless
-
+import Reflex.REWST
 
 type ClientId = Int
 

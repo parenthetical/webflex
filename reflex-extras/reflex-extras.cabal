@@ -24,6 +24,7 @@ library
                      , Reflex.Extra.Orphans
                      , Reflex.Wormhole.Base
                      , Reflex.Wormhole.Class
+                     , Reflex.REWST
   -- other-modules:
   -- other-extensions:
   build-depends:       base

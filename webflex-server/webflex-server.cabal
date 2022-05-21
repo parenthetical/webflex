@@ -27,6 +27,7 @@ library
                      , webflex-core
                      , text
                      , reflex
+                     , reflex-extras
                      , containers
                      , monoidal-containers
                      , mtl

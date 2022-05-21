@@ -35,6 +35,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.Void
 import Webflex.Base
+import Reflex.REWST
 
 -- transform received: (fmap (read . T.unpack) receivedE)
 -- transform to send: fmap (T.pack . show) toSendE

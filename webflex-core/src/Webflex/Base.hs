@@ -21,23 +21,7 @@ import Control.Monad.State.Lazy
 import qualified Data.Aeson as A
 import Data.Void
 import Data.Aeson as A
-
-
--- | Reader-EventWriter-State transformer.
-newtype REWST r w s t m a =
-  REWST (StateT s (EventWriterT t w (ReaderT r m)) a)
-  deriving ( Functor,Applicative,Monad,MonadFix,MonadState s,MonadReader r
-           )
-  
-instance (Reflex t, Semigroup w, Monad m) => EventWriter t w (REWST r w s t m) where
-  tellEvent = REWST . lift . tellEvent
-
-instance MonadTrans (REWST r w s t) where
-  lift = REWST . lift . lift . lift
-
-evalREWST :: (Reflex t, Semigroup w, Monad m) => REWST r w s t m a -> r -> s -> m (a, Event t w)
-evalREWST (REWST p) r s = do
-  runReaderT (runEventWriterT (evalStateT p s)) r
+import Reflex.REWST
 
 newtype ClientT t m a =
   ClientT { client :: REWST (Event t (Map Int Value), Dynamic t Bool) (Map Int Value) Int t m a }

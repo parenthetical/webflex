@@ -30,6 +30,8 @@ import Control.Monad
 import Control.Monad.Fix
 import Reflex.Wormhole.Class
 import Reflex.Wormhole.Base
+import Reflex.REWST
+
 -- FIXME: Get rid of `delay 0.1`, figure out why it was needed.
 
 -- TODO: hard coded delay 0.5 on send and receive.
