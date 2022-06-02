@@ -1,17 +1,8 @@
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 module Webflex.Server where
 
 import Reflex
@@ -50,7 +41,7 @@ import Reflex.REWST
 type ClientId = Int
 
 serverTToHeadless :: forall t m. MonadHeadlessApp t m => ServerT Int t m () -> m (Event t ())
-serverTToHeadless (ServerT program) = do
+serverTToHeadless p = do
   (newClientE, newClientTrigger) <- newTriggerEvent
   (disconnectClientE, disconnectClientTrigger) <- newTriggerEvent
   (rcvE, rcvTrigger) <- newTriggerEvent
@@ -60,13 +51,14 @@ serverTToHeadless (ServerT program) = do
                  ]
   theClients :: Incremental t (PatchMap ClientId ()) <-
     holdIncremental mempty (PatchMap <$> clientChangeE)
-  toSendE :: (Event t (Map ClientId (Map Int Value))) <- fmap (fmap getMonoidalMap . snd) (evalREWST program (rcvE, theClients) 0)
+  toSendE :: (Event t (Map ClientId (Map Int Value))) <-
+    fmap (fmap getMonoidalMap . snd) (evalREWST (server p) (rcvE, theClients) 0)
   doSendMsgs <- liftIO $ wsServer newClientTrigger (curry rcvTrigger) disconnectClientTrigger
   performEvent_ (liftIO . doSendMsgs <$> toSendE)
   pure never
 
-runServer ::  (forall t m. MonadHeadlessApp t m => ServerT Int t m ()) -> IO ()
-runServer x = runHeadlessApp $ serverTToHeadless x
+runServer :: (forall t m. MonadHeadlessApp t m => ServerT Int t m ()) -> IO ()
+runServer x = runHeadlessApp (serverTToHeadless x)
 
 wsServer :: (FromJSON a, ToJSON a)
          => (ClientId -> IO ())

@@ -7,4 +7,4 @@ import Reflex.Spider
 import Reflex.Host.Headless
 
 main :: IO ()
-main = runHeadlessApp (serverTToHeadless todoMVC)
+main = runServer todoMVC
