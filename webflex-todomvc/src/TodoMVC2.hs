@@ -150,7 +150,6 @@ todoMVC :: forall c s m. (WebM c s m, DomBuilder c (CM m), PostBuild c (CM m),
 todoMVC = mdo
   tasksDynS <- liftS $ foldTasks (snd <$> taskActionsES)
   tasksDynC <- atAllCDyn mempty tasksDynS
-  -- FIXME: If you change the location of this line to the top then frontend stops working and backend works or vice versa, forgot which.
   taskActionsEC <- liftC (todoMVCLocal tasksDynC)
   taskActionsES <- atSE taskActionsEC
   pure ()
