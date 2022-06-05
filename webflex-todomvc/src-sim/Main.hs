@@ -1,3 +1,8 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -22,6 +27,8 @@ import Webflex.Base
 import TodoMVC2
 import Reflex.Id.Base (Idnt)
 import Data.FileEmbed
+import Reflex.Persist.Class
+import Reflex.Persist.Dont
 
 runImpureWormholeT :: (MonadIO m, Reflex t, MonadFix m) =>
                             WormholeT Int t (Reflex.Id.Impure.IdT m) b -> m b
@@ -37,8 +44,10 @@ prog :: forall t m. (MonadIO (Performable m), TriggerEvent t m,
                    PerformEvent t m, PostBuild t m, DomBuilder t m, MonadHold t m,
                    MonadFix m) => m ()
 prog = do
-  runPureWormholeT (sim todoMVC todoMVC)
+  runDontPersistT $ runPureWormholeT (sim todoMVC todoMVC)
   pure ()
+
+deriving instance (DomBuilder t m) => DomBuilder t (DontPersistT t m)
 
 main :: IO ()
 main = mainWidgetWithCss $(embedFile "style.css") $ prog

@@ -21,6 +21,7 @@ import Reflex.Adjustable.Class ()
 import Reflex.PostBuild.Class ()
 import Control.Monad.IO.Class
 import Reflex.Wormhole.Class
+import Reflex.Persist.Class
 
 data Voidflex :: *
 
@@ -100,3 +101,5 @@ instance TriggerEvent Voidflex VoidM where
 
 instance Wormholed Voidflex VoidM where
   wormhole = undefined
+
+instance Persist Voidflex VoidM where

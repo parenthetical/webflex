@@ -84,6 +84,7 @@ wsServer onNewClient onRcvMsg onDisconnectClient = do
         `catches`
         [ Handler (\(e :: WS.ConnectionException) -> do
                      T.putStrLn $ "Disconnecting client " <> T.pack (show clientId) <> " because of " <> T.pack (show e)
+                     atomicModifyIORef clientsRef (\(n,cs) -> ((n, Map.delete n cs), ()))
                      onDisconnectClient clientId
                   )
           -- TODO: Other exceptions?

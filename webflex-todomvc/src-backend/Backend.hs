@@ -5,6 +5,8 @@ import Webflex.Server
 import TodoMVC2
 import Reflex.Spider
 import Reflex.Host.Headless
+import Webflex.Base
+import Reflex.Persist.Base
 
 main :: IO ()
-main = runServer todoMVC
+main = runHeadlessApp (serverTToHeadless (mapServerT (runPersistTIO "/tmp/todomvcstore") todoMVC))

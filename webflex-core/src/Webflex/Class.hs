@@ -70,6 +70,7 @@ askNewConnections =
   $ askConnections
 
 -- TODO: Test whether this works correctly with "new value at the same instant as (re)connect of client"
+-- TODO: Does this always resend on a reconnect, even if the client has the value already?
 atAllCDyn :: forall a c s m. (JSON a, WebM c s m, Reflex s, Reflex c, MonadHold c (CM m), Monad m) => a -> Dynamic s a -> m (Dynamic c a)
 atAllCDyn init d = do
   conns <- askConnections

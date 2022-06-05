@@ -77,7 +77,7 @@ import Data.Aeson (ToJSONKey, FromJSONKey, FromJSON,ToJSON)
 import GHC.Generics (Generic)
 import Data.Maybe (fromMaybe)
 import qualified Data.List.NonEmpty as NonEmpty
-
+import Reflex.Persist.Class
 
 data Task
    = Task { taskDescription :: Text
@@ -146,16 +146,17 @@ modifyTasks a = case a of
 
 todoMVC :: forall c s m. (WebM c s m, DomBuilder c (CM m), PostBuild c (CM m),
                    MonadHold c (CM m), MonadHold s (SM m), MonadFix m,
-                   MonadFix (CM m), MonadFix (SM m), Reflex s) => m ()
+                   MonadFix (CM m), MonadFix (SM m), Reflex s, Persist s (SM m)) => m ()
 todoMVC = mdo
-  tasksDynS <- liftS $ foldTasks (snd <$> taskActionsES)
+  tasksDynS <- liftS $ mdo
+    initialTasks' <- persistE initialTasks (updated tasksDynS)
+    tasksDynS' <- foldDyn modifyTasks initialTasks' (snd <$> taskActionsES)
+    pure tasksDynS'
   tasksDynC <- atAllCDyn mempty tasksDynS
   taskActionsEC <- liftC (todoMVCLocal tasksDynC)
   taskActionsES <- atSE taskActionsEC
   pure ()
 
-foldTasks :: (Reflex t, MonadHold t m, MonadFix m) => Event t Action -> m (Dynamic t (Map Int Task))
-foldTasks taskActionsE = foldDyn modifyTasks initialTasks $ taskActionsE
 
 todoMVCLocal
   :: ( DomBuilder t m

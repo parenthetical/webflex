@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
@@ -46,7 +47,10 @@ sim :: forall t m a b conn. (DomBuilder t m, PostBuild t m,
                        , Wormholed t m
                        -- Type of connection identifier
                        , conn ~ Id m, Ord conn, Show conn
-                       ) => ClientT t m a -> ServerT conn t m b -> m ()
+                       )
+    => ClientT t m a
+    -> ServerT conn t m b
+    -> m ()
 sim (ClientT cm) (ServerT sm) = mdo
   elAttr "div" ("style" =: "border: 1px solid gray; padding: 2em") $ do
     el "h1" $ text "The simulator"

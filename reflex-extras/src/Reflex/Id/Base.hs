@@ -26,6 +26,7 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Compose
 import Reflex.Wormhole.Class
 import Reflex.Extra.Orphans ()
+import Reflex.Persist.Class
 
 newtype IdT (m :: * -> *) a = IdT { unIdT :: StateT Int (ReaderT (Int -> Idnt) m) a }
   deriving newtype (Functor, Applicative, Monad, MonadFix, PostBuild t,MonadIO)
@@ -156,3 +157,6 @@ instance (Monad m, Wormholed t m) => Wormholed t (IdT m) where
   wormhole = IdT $ do
     (e,f) <- lift . lift $ wormhole
     pure (e, IdT . lift . lift . f)
+
+instance (Monad m, Persist t m) => Persist t (IdT m) where
+  persistE' = lift . persistE'

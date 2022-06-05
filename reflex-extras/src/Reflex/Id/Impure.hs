@@ -20,9 +20,10 @@ import Control.Monad.Trans.Control
 import Reflex.Extra.Orphans()
 import Reflex.Wormhole.Class
 import Data.IORef
+import Reflex.Persist.Class
 
 newtype IdT (m :: * -> *) a = IdT { unIdT :: ReaderT (IORef Int) m a }
-  deriving newtype (Functor, Applicative, Monad, MonadFix, PostBuild t, NotReady t, TriggerEvent t, PerformEvent t)
+  deriving newtype (Functor, Applicative, Monad, MonadFix, PostBuild t, NotReady t, TriggerEvent t, PerformEvent t, Persist t)
   deriving (MonadTrans,MonadTransControl) via ReaderT (IORef Int)
   deriving (MonadSample t, MonadHold t) via ReaderT (IORef Int) m
 

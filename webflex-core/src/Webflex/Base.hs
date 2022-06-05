@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -56,6 +57,9 @@ newtype ServerT i t m a =
                       a
           }
   deriving (Functor,Applicative,Monad,MonadFix,MonadTrans)
+
+mapServerT :: (forall x. m x -> n x) -> ServerT i t m a -> ServerT i t n a
+mapServerT f (ServerT x) = ServerT (mapREWST f x)
 
 instance ( Ord i, Reflex t, Monad m
          ) => WebM Voidflex t (ServerT i t m) where

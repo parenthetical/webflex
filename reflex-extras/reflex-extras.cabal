@@ -24,6 +24,9 @@ library
                      , Reflex.Extra.Orphans
                      , Reflex.Wormhole.Base
                      , Reflex.Wormhole.Class
+                     , Reflex.Persist.Base
+                     , Reflex.Persist.Dont
+                     , Reflex.Persist.Class
                      , Reflex.REWST
   -- other-modules:
   -- other-extensions:
@@ -45,5 +48,6 @@ library
                      , semialign
                      , data-default
                      , monoidal-containers
+                     , aeson
   hs-source-dirs:      src
   default-language:    Haskell2010

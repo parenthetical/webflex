@@ -27,12 +27,14 @@ import Reflex.Dom (DomBuilder(..))
 import Control.Monad.Trans.Control
 import Reflex.Extra.Orphans ()
 import Control.Monad.Trans.Compose
+import Reflex.Persist.Class
 
 type WormholeComp i t = (ComposeT (EventWriterT t (MonoidalMap i [Any])) (ReaderT (i -> Event t [Any])))
 
 newtype WormholeT i t m a = WormholeT
   { unWormholeT :: EventWriterT t (MonoidalMap i [Any]) (ReaderT (i -> Event t [Any]) m) a }
-  deriving newtype (Functor,Applicative,Monad,MonadFix,MonadSample t,MonadHold t, NotReady t, PostBuild t,MonadIO, GetId)
+  deriving newtype (Functor,Applicative,Monad,MonadFix,MonadSample t,MonadHold t, NotReady t, PostBuild t,MonadIO, GetId
+                   , Persist t)
   deriving (MonadTrans,MonadTransControl) via WormholeComp i t
 --  deriving (DomBuilder t) via ApplyT (WormholeComp i t) m
 
