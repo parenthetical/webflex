@@ -1,4 +1,16 @@
 {
+    "easy-hls-nix": {
+        "branch": "main",
+        "description": "Easy Haskell Language Server tooling with Nix!",
+        "homepage": "",
+        "owner": "jkachmar",
+        "repo": "easy-hls-nix",
+        "rev": "ecb85ab6ba0aab0531fff32786dfc51feea19370",
+        "sha256": "14v0jx8ik40vpkcq1af1b3377rhkh95f4v2cl83bbzpna9aq6hn2",
+        "type": "tarball",
+        "url": "https://github.com/jkachmar/easy-hls-nix/archive/ecb85ab6ba0aab0531fff32786dfc51feea19370.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "niv": {
         "branch": "master",
         "description": "Easy dependency management for Nix projects",
@@ -17,10 +29,10 @@
         "homepage": "https://reflex-frp.org",
         "owner": "reflex-frp",
         "repo": "reflex-platform",
-        "rev": "7b2bc2040c5631f486727073846c399671e2a3dd",
-        "sha256": "03c0bhfr8g08gcv3alf2s3c92jfsqvbim02l2zmk8b38xa9lnz52",
+        "rev": "ac66356c8839d1dc16cc60887c2db5988a60e6c4",
+        "sha256": "0zk8pf72lid6cqq4mlr1mcwh6zd5lz9i83kw519aci6mfba1afvq",
         "type": "tarball",
-        "url": "https://github.com/reflex-frp/reflex-platform/archive/7b2bc2040c5631f486727073846c399671e2a3dd.tar.gz",
+        "url": "https://github.com/reflex-frp/reflex-platform/archive/ac66356c8839d1dc16cc60887c2db5988a60e6c4.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
