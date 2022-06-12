@@ -1,40 +1,54 @@
 # Webflex
+Purely functional web applications for Reflex FRP. This (experimental) library allows you to write a web application as a single program, in a truly functional and composable way. No `IO` here!
 
-Purely functional web applications for Reflex FRP.
+## Introduction with a click-counter example
+For a quick introduction, let's write a simple click counter application using Webflex (code below). Here's what it will end up looking like:
+![Webcounter screenshot](img/webcounter.png)
 
-## Interface
-Found in [webflex-core:Webflex.Class](webflex-core/src/Webflex/Class.hs).
 
 ```haskell
--- | Client-server web programming in Reflex. The @c@ and @s@ type
--- variables are the type of Reflex timelines of the clients and the
--- server. There are corresponding @CM@ and @SM@ contexts for clients
--- and server.
-class (Ord (C m)) => WebM c s m | m -> c, m -> s where
-  -- | Client identifiers.
-  type C m :: *
-  -- | Client-side Reflex monad.
-  type CM m :: * -> *
-  -- | Server-side Reflex monad.
-  type SM m :: * -> *
-  -- TODO: Consider making this Event c [a] (enabling "batch processing").
-  -- | Takes a server-side event with client-tagged occurrences, and
-  -- returns a client-side event. The client-side event will have an
-  -- occurrence when the server-side occurrence tagged with that
-  -- particular client's identifier arrives at the client.
-  atCE :: (JSON a) => Event s (Map (C m) a) -> m (Event c a)
-  -- TODO: Consider making this `Event (Map (C m) a)` (batch processing).
-  -- | Knowledge of client-side event occurrences at the server.
-  atSE :: (JSON a) => Event c a -> m (Event s (C m, a))
-  -- | Make the client-side Reflex program available in the 'WebM' monad. The result is
-  -- wrapped in a (Behavior c) so that client-values cannot leak into
-  -- server-side contexts.
-  liftC' :: CM m a -> m (Behavior c a)
-  -- | Make the server-side Reflex program available in the 'WebM' monad. The result is
-  -- wrapped in a (Behavior s) so that server-values cannot leak into
-  -- client-side contexts.
-  liftS' :: SM m a -> m (Behavior s a)
+module WebCounter where
+
+import Reflex
+import Reflex.Dom
+import Webflex.Class
+
+import Control.Monad.Fix
+import qualified Data.Text as T
+
+webcounter ::
+  forall c s m.
+  ( WebM c s m,
+    Reflex s,
+    Reflex c,
+    DomBuilder c (CM m),
+    PostBuild c (CM m),
+    MonadHold c (CM m),
+    MonadHold s (SM m),
+    MonadFix (SM m),
+    Monad m
+  ) =>
+  m ()
+webcounter = do
+  clicks :: Event c () <- liftC $ button "click me"
+  clicksAtS :: Event s (C m, ()) <- atSE clicks
+  countAtS :: Dynamic s Integer <- liftS $ count clicksAtS
+  countC :: Dynamic c Integer <- atAllCDyn 0 countAtS
+  liftC_ $ el "div" $ dynText (fmap (T.pack . show) countC)
+  pure ()
 ```
+
+### The `WebM` monad and basic Webflex functions
+
+In the Webflex monad `WebM c s m` the client and server have different Reflex timelines and monads. These are the `c`, `s`, `CM m`, and `SM m` types in the signature of `webcounter`.
+For example, the client monad `CM m` supports Reflex DOM as denoted by the constraint `DomBuilder c (CM m)`.
+A final type Webflex introduces is the client identifier `C m`, which uniquely identifies any client connected to the server.
+
+To make the client show a button, we write `liftC $ button "click me"`. The `liftC` function takes a value in the client monad and lifts it into the Webflex monad. The `liftC` expression returns a value of type `Event c ()`. In Webflex such a type denotes a set of event occurrences at *any* client.
+
+With the `atSE` function we can obtain a server-side event of when the click events at the client have been propagated to the server. The clicks are tagged with the client identifier.
+
+Finally we can use the standard Reflex `count` function on the server to compute the total number of clicks as a Dynamic of integer. The updates to this dynamic can be captured at all the clients with `atAllCDyn`, and then shown with the Reflex DOM `dynText` function.
 
 ## Implementation
 The implementation has two sides:
@@ -73,4 +87,4 @@ There is a simulator for Webflex so that you can easily test out programs.
 
 See `webflex-todomvc` for a client-server version of `reflex-todomvc`.
 
-Run `nix-shell --run "cabal run exe:sim-test"` for a simulated button-click counter app (shows the total number of clicks of a button).
+Run `nix-shell --run "cabal run exe:counter-sim"` for a simulated button-click counter app (shows the total number of clicks of a button).

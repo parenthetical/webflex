@@ -5,26 +5,30 @@
 {-# LANGUAGE OverloadedStrings #-}
 module WebCounter where
 
-import Webflex.Sim
-import Reflex.Dom
 import Reflex
-import Reflex.Wormhole.Base
-import Reflex.Wormhole.Class
-import Control.Monad.IO.Class
-import Control.Monad.Fix
-import Reflex.Id.Impure ( runIdT', IdT )
-import Data.IORef
+import Reflex.Dom
 import Webflex.Class
-import qualified Data.Text as T
-import Webflex.Base
 
-webcounter :: forall c s m. (DomBuilder c (CM m), WebM c s m,
-                       PostBuild c (CM m), Reflex s, MonadHold c (CM m),
-                       MonadHold s (SM m), MonadFix (SM m), Monad m) => m ()
+import Control.Monad.Fix
+import qualified Data.Text as T
+
+webcounter ::
+  forall c s m.
+  ( WebM c s m,
+    Reflex s,
+    Reflex c,
+    DomBuilder c (CM m),
+    PostBuild c (CM m),
+    MonadHold c (CM m),
+    MonadHold s (SM m),
+    MonadFix (SM m),
+    Monad m
+  ) =>
+  m ()
 webcounter = do
-  clickz <- liftC $ button "click me"
-  clickzAtS <- atSE clickz
-  countAtS <- liftS $ count clickzAtS
-  countC <- atAllCDyn (0 :: Integer) countAtS
-  liftC_ $ dynText (fmap (T.pack . show) countC)
+  clicks :: Event c () <- liftC $ button "click me"
+  clicksAtS :: Event s (C m, ()) <- atSE clicks
+  countAtS :: Dynamic s Integer <- liftS $ count clicksAtS
+  countC :: Dynamic c Integer <- atAllCDyn 0 countAtS
+  liftC_ $ el "div" $ dynText (fmap (T.pack . show) countC)
   pure ()
